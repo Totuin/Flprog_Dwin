@@ -1,6 +1,11 @@
 #pragma once
 #include <Arduino.h>
 #include "flprogUtilites.h"
+#include "flprogModbusUtilites.h"
+
+#define FLPROG_DWIN_READY 0
+#define FLPROG_DWIN_WAITING_SENDING 1
+#define FLPROG_DWIN_WAITING_ANSWER 2
 
 typedef void (*FLProgDwinNewDataCallback)(uint8_t index, int32_t addressIndex, int8_t value);
 
@@ -9,7 +14,7 @@ class FLProgDwinDataTable
 public:
   FLProgDwinDataTable() {};
 
-  void index(uint8_t index) { _index = _index; };
+  void index(uint8_t index) { _index = index; };
   uint8_t index() { return _index; };
   void setTableSize(int32_t dataSize);
   void setAddress(int32_t addressIndex, int32_t address);
@@ -17,7 +22,7 @@ public:
 
   int32_t address(int32_t addressIndex);
   int32_t indexForAddres(int32_t address);
-  uint32_t reqestPeriod() { return _reqestPeriod };
+  uint32_t reqestPeriod() { return _reqestPeriod; };
 
   void saveLongByIndex(int32_t value, int32_t startAddressIndex);
   void saveUnsignedLongByIndex(uint32_t value, int32_t startAddressIndex);
@@ -35,9 +40,25 @@ public:
 
   void setCallBack(FLProgDwinNewDataCallback func) { _newDataCallback = func; };
 
-protected:
+  bool hasWriteRegisters();
+  int32_t firstWriteAddress();
+  uint8_t bytesCount(int32_t startAddress, uint8_t result);
   void setDataByIndex(int32_t addressIndex, uint8_t value);
   uint8_t getDataByIndex(int32_t addressIndex);
+  void resetIsNeedWriteIndex(int32_t addressIndex);
+
+  int32_t minAddres();
+  int32_t maxAddres();
+  bool isReady();
+
+  void lastReqestTime(uint32_t time) { _lastReqestTime = time; };
+  uint8_t regSize(int32_t address, uint8_t result);
+  int32_t firstReadAddress();
+  int32_t findNextStartAddres(int32_t address);
+
+protected:
+  bool needWriteAddressForIndex(int32_t addressIndex);
+  bool hasCanReadAddresses();
 
   uint32_t _reqestPeriod = 1000;
   int32_t _dataSize = 0;
@@ -48,6 +69,9 @@ protected:
   bool *_isNeedSend = 0;
   bool *_canWrite = 0;
   bool *_canRead = 0;
+
+  int32_t _minAddres = -1;
+  int32_t _maxAddres = -1;
 
   FLProgDwinNewDataCallback _newDataCallback = 0;
 };

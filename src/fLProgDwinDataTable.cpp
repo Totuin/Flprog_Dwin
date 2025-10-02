@@ -26,9 +26,18 @@ void FLProgDwinDataTable::setAddress(int32_t addressIndex, int32_t address)
   {
     return;
   }
-  _adreses[addressIndex] = address;
+  if (address > 0xFFFF)
+  {
+    _adreses[addressIndex] = -1;
+  }
+  else
+  {
+    _adreses[addressIndex] = address;
+  }
   _canWrite[addressIndex] = true;
   _canRead[addressIndex] = true;
+  _minAddres = -1;
+  _maxAddres = -1;
 }
 
 int32_t FLProgDwinDataTable::address(int32_t addressIndex)
@@ -48,7 +57,7 @@ int32_t FLProgDwinDataTable::indexForAddres(int32_t address)
   }
   for (int32_t i = 0; i < _dataSize; i++)
   {
-    if (_adreses[i] = address)
+    if (_adreses[i] == address)
     {
       return i;
     }
@@ -151,7 +160,7 @@ uint8_t FLProgDwinDataTable::readByteByIndex(int32_t startAddressIndex)
 
 int16_t FLProgDwinDataTable::readIntegerByIndex(int32_t startAddressIndex)
 {
-  return (int16_t(word(lowByte(getDataByIndex(startAddressIndex)), highByte(getDataByIndex(startAddressIndex + 1)))));
+  return (int16_t)(word(getDataByIndex(startAddressIndex)), getDataByIndex(startAddressIndex + 1));
 }
 
 float FLProgDwinDataTable::readFloatByIndex(int32_t startAddressIndex)
@@ -199,3 +208,183 @@ bool FLProgDwinDataTable::readBoolByIndex(int32_t startAddressIndex)
   return false;
 }
 
+bool FLProgDwinDataTable::hasWriteRegisters()
+{
+  return firstWriteAddress() > 0x0FFF;
+}
+
+int32_t FLProgDwinDataTable::firstWriteAddress()
+{
+  for (int32_t i = 0; i < _dataSize; i++)
+  {
+    if (needWriteAddressForIndex(i))
+    {
+      return _adreses[i];
+    }
+  }
+  return -1;
+}
+
+bool FLProgDwinDataTable::needWriteAddressForIndex(int32_t addressIndex)
+{
+  if (addressIndex < 0)
+  {
+    return false;
+  }
+  if (addressIndex >= _dataSize)
+  {
+    return false;
+  }
+  if (_adreses[addressIndex] < 0x1000)
+  {
+    return false;
+  }
+  if (!_canWrite[addressIndex])
+  {
+    return false;
+  }
+  return _isNeedSend[addressIndex];
+}
+
+uint8_t FLProgDwinDataTable::bytesCount(int32_t startAddress, uint8_t result)
+{
+  if (result >= (FLPROG_MODBUS_BUFER_SIZE - 6))
+  {
+    return result;
+  }
+  int32_t newAddres = startAddress + 1;
+  int32_t newIndex = indexForAddres(newAddres);
+  if (needWriteAddressForIndex(newIndex))
+  {
+    return bytesCount(newAddres, (result + 1));
+  }
+  return result;
+}
+
+void FLProgDwinDataTable::resetIsNeedWriteIndex(int32_t addressIndex)
+{
+  if (addressIndex < 0)
+  {
+    return;
+  }
+  if (addressIndex >= _dataSize)
+  {
+    return;
+  }
+  _isNeedSend[addressIndex] = false;
+}
+
+int32_t FLProgDwinDataTable::minAddres()
+{
+  if (_minAddres >= 0)
+  {
+    return _minAddres;
+  }
+  _minAddres = 1000000;
+  for (int32_t i = 0; i < _dataSize; i++)
+  {
+    if (_adreses[i] < _minAddres)
+    {
+      _minAddres = _adreses[i];
+    }
+  }
+  if (_minAddres == 1000000)
+  {
+    _minAddres = -1;
+  }
+  return _minAddres;
+}
+
+int32_t FLProgDwinDataTable::maxAddres()
+{
+  if (_maxAddres >= 0)
+  {
+    return _maxAddres;
+  }
+  for (int32_t i = 0; i < _dataSize; i++)
+  {
+    if (_adreses[i] > _maxAddres)
+    {
+      _maxAddres = _adreses[i];
+    }
+  }
+  return _maxAddres;
+}
+
+bool FLProgDwinDataTable::isReady()
+{
+  if (!hasCanReadAddresses())
+  {
+    return false;
+  }
+  if (flprog::isTimer(_lastReqestTime, _reqestPeriod))
+  {
+    return true;
+  }
+  return false;
+}
+
+bool FLProgDwinDataTable::hasCanReadAddresses()
+{
+  for (int32_t i = 0; i < _dataSize; i++)
+  {
+    if (_canRead[i])
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
+int32_t FLProgDwinDataTable::firstReadAddress()
+{
+  int32_t address = minAddres();
+  int32_t newIndex = indexForAddres(address);
+  if (newIndex < 0)
+  {
+    return findNextStartAddres(address);
+  }
+  if (_canRead[newIndex])
+  {
+    return address;
+  }
+  return findNextStartAddres(address);
+}
+
+int32_t FLProgDwinDataTable::findNextStartAddres(int32_t address)
+{
+  int32_t newAddress = address + 1;
+  if (newAddress > maxAddres())
+  {
+    return -1;
+  }
+  int32_t newIndex = indexForAddres(newAddress);
+  if (newIndex < 0)
+  {
+    return findNextStartAddres(newAddress);
+  }
+  if (_canRead[newIndex])
+  {
+    return newAddress;
+  }
+  return findNextStartAddres(newAddress);
+}
+
+uint8_t FLProgDwinDataTable::regSize(int32_t address, uint8_t result)
+{
+  if (result >= (FLPROG_MODBUS_BUFER_SIZE - 6))
+  {
+    return result;
+  }
+  int32_t newAddress = address + 1;
+  int32_t newIndex = indexForAddres(newAddress);
+  if (newIndex < 0)
+  {
+    return result;
+  }
+  if (!_canRead[newIndex])
+  {
+    return result;
+  }
+  return regSize(newAddress, newIndex);
+}
