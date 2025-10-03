@@ -1,0 +1,69 @@
+#######################################
+# Syntax Coloring Map
+#######################################
+#######################################
+# # Datatypes (KEYWORD1)
+#######################################
+FLProgDwin	KEYWORD1
+FLProgDwinDataTable	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+address	KEYWORD2
+bytesCount	KEYWORD2
+findNextStartAddres	KEYWORD2
+firstReadAddress	KEYWORD2
+firstWriteAddress	KEYWORD2
+getDataByIndex	KEYWORD2
+getEnable	KEYWORD2
+getPort	KEYWORD2
+getSkippingEvents	KEYWORD2
+getTimeOutTime	KEYWORD2
+hasWriteRegisters	KEYWORD2
+index	KEYWORD2
+indexForAddres	KEYWORD2
+isPause	KEYWORD2
+isReady	KEYWORD2
+lastReqestTime	KEYWORD2
+maxAddres	KEYWORD2
+minAddres	KEYWORD2
+pool	KEYWORD2
+readBoolByIndex	KEYWORD2
+readByteByIndex	KEYWORD2
+readFloatByIndex	KEYWORD2
+readIntegerByIndex	KEYWORD2
+readLongByIndex	KEYWORD2
+readUnsignedLongByIndex	KEYWORD2
+regSize	KEYWORD2
+reqestPeriod	KEYWORD2
+resetIsNeedWriteIndex	KEYWORD2
+saveBoolByIndex	KEYWORD2
+saveByteByIndex	KEYWORD2
+saveFloatByIndex	KEYWORD2
+saveIntegerByIndex	KEYWORD2
+saveLongByIndex	KEYWORD2
+saveUnsignedLongByIndex	KEYWORD2
+setAddress	KEYWORD2
+setCallBack	KEYWORD2
+setDataBitUart	KEYWORD2
+setDataByIndex	KEYWORD2
+setEnable	KEYWORD2
+setParityUart	KEYWORD2
+setPinRxUart	KEYWORD2
+setPinTxUart	KEYWORD2
+setPort	KEYWORD2
+setReqestPeriod	KEYWORD2
+setSkippingEvents	KEYWORD2
+setSpeedUart	KEYWORD2
+setStopBitUart	KEYWORD2
+setTableSize	KEYWORD2
+setTimeOutTime	KEYWORD2
+setUart	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+FLPROG_DWIN_READY	LITERAL1
+FLPROG_DWIN_WAITING_ANSWER	LITERAL1
+FLPROG_DWIN_WAITING_SENDING	LITERAL1
