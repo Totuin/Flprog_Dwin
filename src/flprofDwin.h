@@ -70,9 +70,7 @@ protected:
   bool nextTable();
   FLProgDwinDataTable *firstReadTable();
   FLProgDwinDataTable *nextTable(FLProgDwinDataTable *_table);
-
-  FLProgDwinDataTable *tableForAddres(int32_t address);
-  FLProgDwinDataTable *firstWriteSlave();
+  FLProgDwinDataTable *firstWriteTable();
 
   FlprogAbstractUartExecutor *_executor = 0;
   FLProgDwinDataTable *_tables = 0;

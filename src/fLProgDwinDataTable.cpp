@@ -4,11 +4,10 @@ void FLProgDwinDataTable::setTableSize(int32_t dataSize)
 {
   _dataSize = dataSize;
   _adreses = new int32_t[_dataSize];
-  _values = new uint8_t[_dataSize];
+  _values = new uint16_t[_dataSize];
   _isNeedSend = new bool[_dataSize];
   _canWrite = new bool[_dataSize];
   _canRead = new bool[_dataSize];
-
   for (int32_t i = 0; i < _dataSize; i++)
   {
     _adreses[i] = -1;
@@ -65,7 +64,7 @@ int32_t FLProgDwinDataTable::indexForAddres(int32_t address)
   return -1;
 }
 
-void FLProgDwinDataTable::setDataByIndex(int32_t addressIndex, uint8_t value)
+void FLProgDwinDataTable::setDataByIndex(int32_t addressIndex, uint16_t value)
 {
   if (addressIndex < 0)
   {
@@ -88,40 +87,54 @@ void FLProgDwinDataTable::setDataByIndex(int32_t addressIndex, uint8_t value)
   }
 }
 
+void FLProgDwinDataTable::writeDataByIndex(int32_t addressIndex, uint16_t value)
+{
+  if (addressIndex < 0)
+  {
+    return;
+  }
+  if (addressIndex >= _dataSize)
+  {
+    return;
+  }
+  if (_values[addressIndex] == value)
+  {
+    return;
+  }
+  _values[addressIndex] = value;
+  if (_newDataCallback != 0)
+  {
+    _newDataCallback(_index, addressIndex, value);
+  }
+}
+
 void FLProgDwinDataTable::saveLongByIndex(int32_t value, int32_t startAddressIndex)
 {
-  unsigned char sourse[4];
+  uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, sourse[0]);
-  setDataByIndex((startAddressIndex + 1), sourse[1]);
-  setDataByIndex((startAddressIndex + 2), sourse[2]);
-  setDataByIndex((startAddressIndex + 3), sourse[3]);
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
 }
 
 void FLProgDwinDataTable::saveUnsignedLongByIndex(uint32_t value, int32_t startAddressIndex)
 {
-  unsigned char sourse[4];
+  uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, sourse[0]);
-  setDataByIndex((startAddressIndex + 1), sourse[1]);
-  setDataByIndex((startAddressIndex + 2), sourse[2]);
-  setDataByIndex((startAddressIndex + 3), sourse[3]);
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
 }
 
 void FLProgDwinDataTable::saveFloatByIndex(float value, int32_t startAddressIndex)
 {
-  unsigned char sourse[4];
+  uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, sourse[0]);
-  setDataByIndex((startAddressIndex + 1), sourse[1]);
-  setDataByIndex((startAddressIndex + 2), sourse[2]);
-  setDataByIndex((startAddressIndex + 3), sourse[3]);
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
 }
 
 void FLProgDwinDataTable::saveIntegerByIndex(int16_t value, int32_t startAddressIndex)
 {
-  setDataByIndex(startAddressIndex, lowByte(value));
-  setDataByIndex((startAddressIndex + 1), highByte(value));
+  setDataByIndex(startAddressIndex, value);
 }
 
 void FLProgDwinDataTable::saveByteByIndex(uint8_t value, int32_t startAddressIndex)
@@ -139,7 +152,7 @@ void FLProgDwinDataTable::saveBoolByIndex(bool value, int32_t startAddressIndex)
   setDataByIndex(startAddressIndex, 0);
 }
 
-uint8_t FLProgDwinDataTable::getDataByIndex(int32_t addressIndex)
+uint16_t FLProgDwinDataTable::getDataByIndex(int32_t addressIndex)
 {
   if (addressIndex < 0)
   {
@@ -160,17 +173,19 @@ uint8_t FLProgDwinDataTable::readByteByIndex(int32_t startAddressIndex)
 
 int16_t FLProgDwinDataTable::readIntegerByIndex(int32_t startAddressIndex)
 {
-  return (int16_t)(word(getDataByIndex(startAddressIndex)), getDataByIndex(startAddressIndex + 1));
+  return getDataByIndex(startAddressIndex);
 }
 
 float FLProgDwinDataTable::readFloatByIndex(int32_t startAddressIndex)
 {
   float result;
-  unsigned char sourse[4];
-  sourse[0] = getDataByIndex(startAddressIndex);
-  sourse[1] = getDataByIndex(startAddressIndex + 1);
-  sourse[2] = getDataByIndex(startAddressIndex + 2);
-  sourse[3] = getDataByIndex(startAddressIndex + 3);
+  uint8_t sourse[4];
+  uint16_t temp = getDataByIndex(startAddressIndex);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[2] = lowByte(temp);
+  sourse[3] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
@@ -178,11 +193,13 @@ float FLProgDwinDataTable::readFloatByIndex(int32_t startAddressIndex)
 int32_t FLProgDwinDataTable::readLongByIndex(int32_t startAddressIndex)
 {
   int32_t result;
-  unsigned char sourse[4];
-  sourse[0] = getDataByIndex(startAddressIndex);
-  sourse[1] = getDataByIndex(startAddressIndex + 1);
-  sourse[2] = getDataByIndex(startAddressIndex + 2);
-  sourse[3] = getDataByIndex(startAddressIndex + 3);
+  uint8_t sourse[4];
+  uint16_t temp = getDataByIndex(startAddressIndex);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[2] = lowByte(temp);
+  sourse[3] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
@@ -190,11 +207,13 @@ int32_t FLProgDwinDataTable::readLongByIndex(int32_t startAddressIndex)
 uint32_t FLProgDwinDataTable::readUnsignedLongByIndex(int32_t startAddressIndex)
 {
   uint32_t result;
-  unsigned char sourse[4];
-  sourse[0] = getDataByIndex(startAddressIndex);
-  sourse[1] = getDataByIndex(startAddressIndex + 1);
-  sourse[2] = getDataByIndex(startAddressIndex + 2);
-  sourse[3] = getDataByIndex(startAddressIndex + 3);
+  uint8_t sourse[4];
+  uint16_t temp = getDataByIndex(startAddressIndex);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[2] = lowByte(temp);
+  sourse[3] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
@@ -244,21 +263,6 @@ bool FLProgDwinDataTable::needWriteAddressForIndex(int32_t addressIndex)
     return false;
   }
   return _isNeedSend[addressIndex];
-}
-
-uint8_t FLProgDwinDataTable::bytesCount(int32_t startAddress, uint8_t result)
-{
-  if (result >= (FLPROG_MODBUS_BUFER_SIZE - 6))
-  {
-    return result;
-  }
-  int32_t newAddres = startAddress + 1;
-  int32_t newIndex = indexForAddres(newAddres);
-  if (needWriteAddressForIndex(newIndex))
-  {
-    return bytesCount(newAddres, (result + 1));
-  }
-  return result;
 }
 
 void FLProgDwinDataTable::resetIsNeedWriteIndex(int32_t addressIndex)
@@ -342,16 +346,16 @@ int32_t FLProgDwinDataTable::firstReadAddress()
   int32_t newIndex = indexForAddres(address);
   if (newIndex < 0)
   {
-    return findNextStartAddres(address);
+    return findNextReadAddres(address);
   }
   if (_canRead[newIndex])
   {
     return address;
   }
-  return findNextStartAddres(address);
+  return findNextReadAddres(address);
 }
 
-int32_t FLProgDwinDataTable::findNextStartAddres(int32_t address)
+int32_t FLProgDwinDataTable::findNextReadAddres(int32_t address)
 {
   int32_t newAddress = address + 1;
   if (newAddress > maxAddres())
@@ -361,16 +365,16 @@ int32_t FLProgDwinDataTable::findNextStartAddres(int32_t address)
   int32_t newIndex = indexForAddres(newAddress);
   if (newIndex < 0)
   {
-    return findNextStartAddres(newAddress);
+    return findNextReadAddres(newAddress);
   }
   if (_canRead[newIndex])
   {
     return newAddress;
   }
-  return findNextStartAddres(newAddress);
+  return findNextReadAddres(newAddress);
 }
 
-uint8_t FLProgDwinDataTable::regSize(int32_t address, uint8_t result)
+uint8_t FLProgDwinDataTable::readRegSize(int32_t address, uint8_t result)
 {
   if (result >= (FLPROG_MODBUS_BUFER_SIZE - 6))
   {
@@ -386,5 +390,5 @@ uint8_t FLProgDwinDataTable::regSize(int32_t address, uint8_t result)
   {
     return result;
   }
-  return regSize(newAddress, newIndex);
+  return readRegSize(newAddress, (result + 1));
 }

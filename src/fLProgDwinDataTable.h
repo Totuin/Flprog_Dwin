@@ -17,6 +17,7 @@ public:
   void index(uint8_t index) { _index = index; };
   uint8_t index() { return _index; };
   void setTableSize(int32_t dataSize);
+  int32_t getTableSize() { return _dataSize; };
   void setAddress(int32_t addressIndex, int32_t address);
   void setReqestPeriod(uint32_t period) { _reqestPeriod = period; };
 
@@ -42,9 +43,10 @@ public:
 
   bool hasWriteRegisters();
   int32_t firstWriteAddress();
-  uint8_t bytesCount(int32_t startAddress, uint8_t result);
-  void setDataByIndex(int32_t addressIndex, uint8_t value);
-  uint8_t getDataByIndex(int32_t addressIndex);
+
+  void setDataByIndex(int32_t addressIndex, uint16_t value);
+  void writeDataByIndex(int32_t addressIndex, uint16_t value);
+  uint16_t getDataByIndex(int32_t addressIndex);
   void resetIsNeedWriteIndex(int32_t addressIndex);
 
   int32_t minAddres();
@@ -52,9 +54,9 @@ public:
   bool isReady();
 
   void lastReqestTime(uint32_t time) { _lastReqestTime = time; };
-  uint8_t regSize(int32_t address, uint8_t result);
+  uint8_t readRegSize(int32_t address, uint8_t result);
   int32_t firstReadAddress();
-  int32_t findNextStartAddres(int32_t address);
+  int32_t findNextReadAddres(int32_t address);
 
 protected:
   bool needWriteAddressForIndex(int32_t addressIndex);
@@ -64,7 +66,7 @@ protected:
   int32_t _dataSize = 0;
   uint32_t _lastReqestTime;
   uint8_t _index = 0;
-  uint8_t *_values = 0;
+  uint16_t *_values = 0;
   int32_t *_adreses = 0;
   bool *_isNeedSend = 0;
   bool *_canWrite = 0;

@@ -243,10 +243,10 @@ bool FLProgDwin::createNewTelegramm()
 
 bool FLProgDwin::hasWriteRegisters()
 {
-  return !(firstWriteSlave() == 0);
+  return !(firstWriteTable() == 0);
 }
 
-FLProgDwinDataTable *FLProgDwin::firstWriteSlave()
+FLProgDwinDataTable *FLProgDwin::firstWriteTable()
 {
   for (int8_t i = 0; i < _croupsSize; i++)
   {
@@ -260,29 +260,28 @@ FLProgDwinDataTable *FLProgDwin::firstWriteSlave()
 
 bool FLProgDwin::createWriteTelegramm()
 {
-  FLProgDwinDataTable *table = firstWriteSlave();
+  FLProgDwinDataTable *table = firstWriteTable();
   int16_t startAddress = table->firstWriteAddress();
-  uint8_t bytesCount = table->bytesCount(startAddress, 1);
-  int32_t addrIndex = 0;
-  _bufferSize = 6;
+  int32_t addrIndex = table->indexForAddres(startAddress);
+  uint16_t value = table->getDataByIndex(addrIndex);
+  table->resetIsNeedWriteIndex(addrIndex);
+  _bufferSize = 8;
   _buffer[0] = 0x5A;
   _buffer[1] = 0xA5;
-  _buffer[2] = bytesCount + 3;
+  _buffer[2] = 5;
   _buffer[3] = 0x82;
   _buffer[4] = highByte(startAddress);
   _buffer[5] = lowByte(startAddress);
-  for (uint8_t i = 0; i < bytesCount; i++)
-  {
-    addrIndex = table->indexForAddres(startAddress + i);
-    _buffer[_bufferSize] = table->getDataByIndex(addrIndex);
-    table->resetIsNeedWriteIndex(addrIndex);
-    _bufferSize++;
-  }
-  uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer);
+  _buffer[6] = highByte(value);
+  _buffer[7] = lowByte(value);
+
+  /*
+   uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer);
   _buffer[_bufferSize] = highByte(crc);
   _bufferSize++;
   _buffer[_bufferSize] = lowByte(crc);
   _bufferSize++;
+  */
   return true;
 }
 
@@ -292,15 +291,6 @@ void FLProgDwin::sendQuery()
   {
     _executor->readUart(_uartPortNumber);
   }
-
-  Serial6.println("Send - ");
-
-  for (uint8_t i = 0; i < _bufferSize; i++)
-  {
-    Serial6.print(_buffer[i], HEX);
-    Serial6.print(" - ");
-  }
-  Serial6.println();
   _executor->writeUart(_buffer, _bufferSize, _uartPortNumber);
   _startSendTime = millis();
   _status = FLPROG_DWIN_WAITING_ANSWER;
@@ -347,16 +337,6 @@ uint16_t FLProgDwin::pacadgeSize()
 
 void FLProgDwin::checkAnswerData()
 {
-
-  Serial6.println("Read - ");
-  for (uint8_t i = 0; i < _bufferSize; i++)
-  {
-    Serial6.print(_buffer[i],HEX);
-    Serial6.print(" - ");
-  }
-  Serial6.println();
-
-
   if (_buffer[3] == 0x82)
   {
     _status = FLPROG_DWIN_READY;
@@ -371,11 +351,17 @@ void FLProgDwin::checkAnswerData()
       _bufferSize = 0;
       return;
     }
-    uint16_t startAddress = word(_buffer[4], _buffer[5]);
-    uint8_t len = _buffer[6] * 2;
-    uint8_t currentByte = 7;
+    if (_currentTable == 0)
+    {
+      _status = FLPROG_DWIN_READY;
+      _bufferSize = 0;
+      return;
+    }
+    int32_t startAddress = (int32_t)word(_buffer[4], _buffer[5]);
     int32_t addressIndex;
-    for (uint8_t i = 0; i < len; i++)
+    uint8_t currentByte = 7;
+    uint16_t currentValue;
+    for (uint8_t i = 0; i < _buffer[6]; i++)
     {
       if (currentByte >= _bufferSize)
       {
@@ -383,13 +369,11 @@ void FLProgDwin::checkAnswerData()
         _bufferSize = 0;
         return;
       }
-      FLProgDwinDataTable *table = tableForAddres((int32_t)(startAddress + i));
-      if (table != 0)
-      {
-        addressIndex = table->indexForAddres((int32_t)(startAddress + i));
-        table->setDataByIndex(addressIndex, _buffer[currentByte]);
-      }
-      currentByte++;
+      currentValue = word(_buffer[currentByte], _buffer[currentByte + 1]);
+      addressIndex = _currentTable->indexForAddres(startAddress);
+      _currentTable->writeDataByIndex(addressIndex, currentValue);
+      startAddress++;
+      currentByte = currentByte + 2;
     }
   }
   _status = FLPROG_DWIN_READY;
@@ -397,17 +381,7 @@ void FLProgDwin::checkAnswerData()
   return;
 }
 
-FLProgDwinDataTable *FLProgDwin::tableForAddres(int32_t address)
-{
-  for (int8_t i = 0; i < _croupsSize; i++)
-  {
-    if ((_tables[i].indexForAddres(address)) >= 0)
-    {
-      return &_tables[i];
-    }
-  }
-  return 0;
-}
+
 
 void FLProgDwin::setCallBack(FLProgDwinNewDataCallback func)
 {
@@ -472,7 +446,7 @@ bool FLProgDwin::nextAddress()
     _currentAddres = -1;
     return false;
   }
-  _currentAddres = _currentTable->findNextStartAddres(_currentAddres);
+  _currentAddres = _currentTable->findNextReadAddres(_currentAddres);
   if (_currentAddres < 0)
   {
     return nextTable();
@@ -536,12 +510,7 @@ bool FLProgDwin::createReadTelegram()
   {
     return false;
   }
-  uint8_t regSize = _currentTable->regSize(_currentAddres, 1);
-  uint8_t worldSize = (uint8_t)(regSize / 2);
-  if ((worldSize * 2) < regSize)
-  {
-    worldSize++;
-  }
+  uint8_t regSize = _currentTable->readRegSize(_currentAddres, 1);
   _bufferSize = 7;
   _buffer[0] = 0x5A;
   _buffer[1] = 0xA5;
@@ -549,7 +518,7 @@ bool FLProgDwin::createReadTelegram()
   _buffer[3] = 0x83;
   _buffer[4] = highByte(_currentAddres);
   _buffer[5] = lowByte(_currentAddres);
-  _buffer[6] = worldSize;
+  _buffer[6] = regSize;
   _currentAddres = _currentAddres + regSize;
   /*uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer);
   _buffer[_bufferSize] = highByte(crc);
