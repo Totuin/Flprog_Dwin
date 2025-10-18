@@ -12,7 +12,9 @@ int16_t tempInt;
 
 void setup()
 {
+  dwin.setUseCRC(false);
   dwin.setTableSize(0, 8);
+  dwin.setType(0, FLPROG_DWIN_VP_TABLE);
   dwin.setAddress(0, 0, 0x5000);
   dwin.setAddress(0, 1, 0x5001);
   dwin.setAddress(0, 2, 0x5002);
@@ -24,14 +26,12 @@ void setup()
   dwin.setSpeedUart(115200);
   dwin.setReqestPeriod(0, 100);
   timerTime = flprog::timeBack(counterPeriod);
-
   Serial4.begin(115200);
 }
 
 void loop()
 {
   dwin.pool();
-
   if (flprog::isTimer(timerTime, counterPeriod))
   {
     timerTime = millis();
@@ -47,9 +47,7 @@ void loop()
     dwin.saveIntegerByIndex(0, counter, 3);
     dwin.saveIntegerByIndex(0, counter, 4);
   }
-
   tempInt = dwin.readIntegerByIndex(0, 0);
-
   if (!(value5000 == tempInt))
   {
     value5000 = tempInt;

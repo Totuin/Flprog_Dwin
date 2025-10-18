@@ -67,6 +67,24 @@ uint32_t FLProgDwin::reqestPeriod(uint8_t groupIndex)
   return _tables[groupIndex].reqestPeriod();
 }
 
+void FLProgDwin::setType(uint8_t groupIndex, uint8_t type)
+{
+  if (groupIndex >= _croupsSize)
+  {
+    return;
+  }
+  return _tables[groupIndex].setType(type);
+}
+
+uint8_t FLProgDwin::getType(uint8_t groupIndex)
+{
+  if (groupIndex >= _croupsSize)
+  {
+    return FLPROG_DWIN_VP_TABLE;
+  }
+  return _tables[groupIndex].getType();
+}
+
 void FLProgDwin::saveLongByIndex(uint8_t groupIndex, int32_t value, int32_t startAddressIndex)
 {
   if (groupIndex >= _croupsSize)
@@ -268,20 +286,27 @@ bool FLProgDwin::createWriteTelegramm()
   _bufferSize = 8;
   _buffer[0] = 0x5A;
   _buffer[1] = 0xA5;
-  _buffer[2] = 5;
+  if (_isUseCRC)
+  {
+    _buffer[2] = 7;
+  }
+  else
+  {
+    _buffer[2] = 5;
+  }
   _buffer[3] = 0x82;
   _buffer[4] = highByte(startAddress);
   _buffer[5] = lowByte(startAddress);
   _buffer[6] = highByte(value);
   _buffer[7] = lowByte(value);
-
-  /*
-   uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer);
-  _buffer[_bufferSize] = highByte(crc);
-  _bufferSize++;
-  _buffer[_bufferSize] = lowByte(crc);
-  _bufferSize++;
-  */
+  if (_isUseCRC)
+  {
+    uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer, 3);
+    _buffer[_bufferSize] = lowByte(crc);
+    _bufferSize++;
+    _buffer[_bufferSize] = highByte(crc);
+    _bufferSize++;
+  }
   return true;
 }
 
@@ -291,6 +316,13 @@ void FLProgDwin::sendQuery()
   {
     _executor->readUart(_uartPortNumber);
   }
+  Serial4.print("Dwin Send: ");
+  for (uint8_t i = 0; i < _bufferSize; i++)
+  {
+    Serial4.print(_buffer[i], HEX);
+    Serial4.print("-");
+  }
+  Serial4.println();
   _executor->writeUart(_buffer, _bufferSize, _uartPortNumber);
   _startSendTime = millis();
   _status = FLPROG_DWIN_WAITING_ANSWER;
@@ -357,6 +389,14 @@ void FLProgDwin::checkAnswerData()
       _bufferSize = 0;
       return;
     }
+    Serial4.print("Dwin Read: ");
+    for (uint8_t i = 0; i < _bufferSize; i++)
+    {
+      Serial4.print(_buffer[i], HEX);
+      Serial4.print("-");
+    }
+    Serial4.println();
+
     int32_t startAddress = (int32_t)word(_buffer[4], _buffer[5]);
     int32_t addressIndex;
     uint8_t currentByte = 7;
@@ -380,8 +420,6 @@ void FLProgDwin::checkAnswerData()
   _bufferSize = 0;
   return;
 }
-
-
 
 void FLProgDwin::setCallBack(FLProgDwinNewDataCallback func)
 {
@@ -514,16 +552,26 @@ bool FLProgDwin::createReadTelegram()
   _bufferSize = 7;
   _buffer[0] = 0x5A;
   _buffer[1] = 0xA5;
-  _buffer[2] = 4;
+  if (_isUseCRC)
+  {
+    _buffer[2] = 6;
+  }
+  else
+  {
+    _buffer[2] = 4;
+  }
   _buffer[3] = 0x83;
   _buffer[4] = highByte(_currentAddres);
   _buffer[5] = lowByte(_currentAddres);
   _buffer[6] = regSize;
   _currentAddres = _currentAddres + regSize;
-  /*uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer);
-  _buffer[_bufferSize] = highByte(crc);
-  _bufferSize++;
-  _buffer[_bufferSize] = lowByte(crc);
-  _bufferSize++;*/
+  if (_isUseCRC)
+  {
+    uint16_t crc = flprogModus::modbusCalcCRC(_bufferSize, _buffer, 3);
+    _buffer[_bufferSize] = lowByte(crc);
+    _bufferSize++;
+    _buffer[_bufferSize] = highByte(crc);
+    _bufferSize++;
+  }
   return true;
 }

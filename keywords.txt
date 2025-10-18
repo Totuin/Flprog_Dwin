@@ -11,15 +11,17 @@ FLProgDwinDataTable	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 address	KEYWORD2
-bytesCount	KEYWORD2
-findNextStartAddres	KEYWORD2
+findNextReadAddres	KEYWORD2
 firstReadAddress	KEYWORD2
 firstWriteAddress	KEYWORD2
 getDataByIndex	KEYWORD2
 getEnable	KEYWORD2
 getPort	KEYWORD2
 getSkippingEvents	KEYWORD2
+getTableSize	KEYWORD2
 getTimeOutTime	KEYWORD2
+getType	KEYWORD2
+getUseCRC	KEYWORD2
 hasWriteRegisters	KEYWORD2
 index	KEYWORD2
 indexForAddres	KEYWORD2
@@ -34,8 +36,8 @@ readByteByIndex	KEYWORD2
 readFloatByIndex	KEYWORD2
 readIntegerByIndex	KEYWORD2
 readLongByIndex	KEYWORD2
+readRegSize	KEYWORD2
 readUnsignedLongByIndex	KEYWORD2
-regSize	KEYWORD2
 reqestPeriod	KEYWORD2
 resetIsNeedWriteIndex	KEYWORD2
 saveBoolByIndex	KEYWORD2
@@ -59,11 +61,16 @@ setSpeedUart	KEYWORD2
 setStopBitUart	KEYWORD2
 setTableSize	KEYWORD2
 setTimeOutTime	KEYWORD2
+setType	KEYWORD2
 setUart	KEYWORD2
+setUseCRC	KEYWORD2
+writeDataByIndex	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
 #######################################
 FLPROG_DWIN_READY	LITERAL1
+FLPROG_DWIN_SP_TABLE	LITERAL1
+FLPROG_DWIN_VP_TABLE	LITERAL1
 FLPROG_DWIN_WAITING_ANSWER	LITERAL1
 FLPROG_DWIN_WAITING_SENDING	LITERAL1

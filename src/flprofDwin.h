@@ -16,6 +16,9 @@ public:
   int32_t indexForAddres(uint8_t groupIndex, int32_t address);
   uint32_t reqestPeriod(uint8_t groupIndex);
 
+  void setType(uint8_t groupIndex, uint8_t type);
+  uint8_t getType(uint8_t groupIndex);
+
   void pool();
 
   void saveLongByIndex(uint8_t groupIndex, int32_t value, int32_t startAddressIndex);
@@ -53,9 +56,12 @@ public:
 
   void setTimeOutTime(uint32_t time) { _timeOutTime = time; };
   uint32_t getTimeOutTime() { return _timeOutTime; };
+  void setUseCRC(bool value) { _isUseCRC = value; };
+  bool getUseCRC() { return _isUseCRC; };
 
 protected:
-  void nextQuery();
+  void
+  nextQuery();
   void checkAnswer();
   uint16_t pacadgeSize();
   void checkAnswerData();
@@ -88,6 +94,8 @@ protected:
 
   uint8_t _bufferSize = 0;
   uint8_t _buffer[FLPROG_MODBUS_BUFER_SIZE];
+
+  bool _isUseCRC = false;
 
   FLProgDwinDataTable *_currentTable = 0;
   int32_t _currentAddres = -1;

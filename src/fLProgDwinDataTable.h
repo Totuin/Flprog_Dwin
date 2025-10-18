@@ -6,6 +6,8 @@
 #define FLPROG_DWIN_READY 0
 #define FLPROG_DWIN_WAITING_SENDING 1
 #define FLPROG_DWIN_WAITING_ANSWER 2
+#define FLPROG_DWIN_SP_TABLE 0
+#define FLPROG_DWIN_VP_TABLE 1
 
 typedef void (*FLProgDwinNewDataCallback)(uint8_t index, int32_t addressIndex, int8_t value);
 
@@ -58,6 +60,9 @@ public:
   int32_t firstReadAddress();
   int32_t findNextReadAddres(int32_t address);
 
+  void setType(uint8_t type) { _type = type; };
+  uint8_t getType() { return _type; };
+
 protected:
   bool needWriteAddressForIndex(int32_t addressIndex);
   bool hasCanReadAddresses();
@@ -74,6 +79,8 @@ protected:
 
   int32_t _minAddres = -1;
   int32_t _maxAddres = -1;
+
+  uint8_t _type = FLPROG_DWIN_VP_TABLE;
 
   FLProgDwinNewDataCallback _newDataCallback = 0;
 };
