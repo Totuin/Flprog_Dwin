@@ -112,24 +112,24 @@ void FLProgDwinDataTable::saveLongByIndex(int32_t value, int32_t startAddressInd
 {
   uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
-  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[3], sourse[2]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[1], sourse[0]))));
 }
 
 void FLProgDwinDataTable::saveUnsignedLongByIndex(uint32_t value, int32_t startAddressIndex)
 {
   uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
-  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[3], sourse[2]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[1], sourse[0]))));
 }
 
 void FLProgDwinDataTable::saveFloatByIndex(float value, int32_t startAddressIndex)
 {
   uint8_t sourse[4];
   memcpy(sourse, &value, 4);
-  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[0], sourse[1]))));
-  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[2], sourse[3]))));
+  setDataByIndex(startAddressIndex, ((int16_t)(word(sourse[3], sourse[2]))));
+  setDataByIndex((startAddressIndex + 1), ((int16_t)(word(sourse[1], sourse[0]))));
 }
 
 void FLProgDwinDataTable::saveIntegerByIndex(int16_t value, int32_t startAddressIndex)
@@ -181,11 +181,11 @@ float FLProgDwinDataTable::readFloatByIndex(int32_t startAddressIndex)
   float result;
   uint8_t sourse[4];
   uint16_t temp = getDataByIndex(startAddressIndex);
-  sourse[0] = lowByte(temp);
-  sourse[1] = highByte(temp);
-  temp = getDataByIndex(startAddressIndex + 1);
   sourse[2] = lowByte(temp);
   sourse[3] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
@@ -195,11 +195,11 @@ int32_t FLProgDwinDataTable::readLongByIndex(int32_t startAddressIndex)
   int32_t result;
   uint8_t sourse[4];
   uint16_t temp = getDataByIndex(startAddressIndex);
-  sourse[0] = lowByte(temp);
-  sourse[1] = highByte(temp);
-  temp = getDataByIndex(startAddressIndex + 1);
   sourse[2] = lowByte(temp);
   sourse[3] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
@@ -209,11 +209,11 @@ uint32_t FLProgDwinDataTable::readUnsignedLongByIndex(int32_t startAddressIndex)
   uint32_t result;
   uint8_t sourse[4];
   uint16_t temp = getDataByIndex(startAddressIndex);
-  sourse[0] = lowByte(temp);
-  sourse[1] = highByte(temp);
-  temp = getDataByIndex(startAddressIndex + 1);
   sourse[2] = lowByte(temp);
   sourse[3] = highByte(temp);
+  temp = getDataByIndex(startAddressIndex + 1);
+  sourse[0] = lowByte(temp);
+  sourse[1] = highByte(temp);
   memcpy(&result, sourse, 4);
   return result;
 }
