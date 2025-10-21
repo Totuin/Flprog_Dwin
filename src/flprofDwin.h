@@ -6,7 +6,7 @@
 class FLProgDwin : public AbstractFLProgClass
 {
 public:
-  FLProgDwin(uint8_t uirtPort, uint8_t croupsSize, FlprogAbstractUartExecutor *executor);
+  FLProgDwin(uint8_t uartPort, uint8_t croupsSize, FlprogAbstractUartExecutor *executor);
 
   void setTableSize(uint8_t groupIndex, int32_t dataSize);
   void setAddress(uint8_t groupIndex, int32_t addressIndex, int32_t address);
@@ -58,6 +58,9 @@ public:
   uint32_t getTimeOutTime() { return _timeOutTime; };
   void setUseCRC(bool value) { _isUseCRC = value; };
   bool getUseCRC() { return _isUseCRC; };
+
+  void setEnableGroup(uint8_t groupIndex, bool enable);
+  bool getEnableGroup(uint8_t groupIndex);
 
 protected:
   void

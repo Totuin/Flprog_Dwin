@@ -229,11 +229,19 @@ bool FLProgDwinDataTable::readBoolByIndex(int32_t startAddressIndex)
 
 bool FLProgDwinDataTable::hasWriteRegisters()
 {
+  if (!_enable)
+  {
+    return false;
+  }
   return firstWriteAddress() > 0x0FFF;
 }
 
 int32_t FLProgDwinDataTable::firstWriteAddress()
 {
+  if (!_enable)
+  {
+    return -1;
+  }
   for (int32_t i = 0; i < _dataSize; i++)
   {
     if (needWriteAddressForIndex(i))
@@ -317,6 +325,10 @@ int32_t FLProgDwinDataTable::maxAddres()
 
 bool FLProgDwinDataTable::isReady()
 {
+  if (!_enable)
+  {
+    return false;
+  }
   if (!hasCanReadAddresses())
   {
     return false;
@@ -342,6 +354,10 @@ bool FLProgDwinDataTable::hasCanReadAddresses()
 
 int32_t FLProgDwinDataTable::firstReadAddress()
 {
+  if (!_enable)
+  {
+    return -1;
+  }
   int32_t address = minAddres();
   int32_t newIndex = indexForAddres(address);
   if (newIndex < 0)
@@ -357,6 +373,10 @@ int32_t FLProgDwinDataTable::firstReadAddress()
 
 int32_t FLProgDwinDataTable::findNextReadAddres(int32_t address)
 {
+  if (!_enable)
+  {
+    return -1;
+  }
   int32_t newAddress = address + 1;
   if (newAddress > maxAddres())
   {

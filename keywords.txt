@@ -16,6 +16,7 @@ firstReadAddress	KEYWORD2
 firstWriteAddress	KEYWORD2
 getDataByIndex	KEYWORD2
 getEnable	KEYWORD2
+getEnableGroup	KEYWORD2
 getPort	KEYWORD2
 getSkippingEvents	KEYWORD2
 getTableSize	KEYWORD2
@@ -51,6 +52,7 @@ setCallBack	KEYWORD2
 setDataBitUart	KEYWORD2
 setDataByIndex	KEYWORD2
 setEnable	KEYWORD2
+setEnableGroup	KEYWORD2
 setParityUart	KEYWORD2
 setPinRxUart	KEYWORD2
 setPinTxUart	KEYWORD2

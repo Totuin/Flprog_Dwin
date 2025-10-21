@@ -63,6 +63,9 @@ public:
   void setType(uint8_t type) { _type = type; };
   uint8_t getType() { return _type; };
 
+  void setEnable(bool enable) { _enable = enable; };
+  bool getEnable() { return _enable; };
+
 protected:
   bool needWriteAddressForIndex(int32_t addressIndex);
   bool hasCanReadAddresses();
@@ -79,6 +82,7 @@ protected:
 
   int32_t _minAddres = -1;
   int32_t _maxAddres = -1;
+  bool _enable = true;
 
   uint8_t _type = FLPROG_DWIN_VP_TABLE;
 

@@ -1,9 +1,9 @@
 #include "flprofDwin.h"
 
-FLProgDwin::FLProgDwin(uint8_t uirtPort, uint8_t croupsSize, FlprogAbstractUartExecutor *executor)
+FLProgDwin::FLProgDwin(uint8_t uartPort, uint8_t croupsSize, FlprogAbstractUartExecutor *executor)
 {
   _executor = executor;
-  _uartPortNumber = uirtPort;
+  _uartPortNumber = uartPort;
   _croupsSize = croupsSize;
   _tables = new FLProgDwinDataTable[croupsSize];
   for (uint8_t i = 0; i < _croupsSize; i++)
@@ -83,6 +83,24 @@ uint8_t FLProgDwin::getType(uint8_t groupIndex)
     return FLPROG_DWIN_VP_TABLE;
   }
   return _tables[groupIndex].getType();
+}
+
+void FLProgDwin::setEnableGroup(uint8_t groupIndex, bool enable)
+{
+  if (groupIndex >= _croupsSize)
+  {
+    return;
+  }
+  return _tables[groupIndex].setEnable(enable);
+}
+
+bool FLProgDwin::getEnableGroup(uint8_t groupIndex)
+{
+  if (groupIndex >= _croupsSize)
+  {
+    return false;
+  }
+  return _tables[groupIndex].getEnable();
 }
 
 void FLProgDwin::saveLongByIndex(uint8_t groupIndex, int32_t value, int32_t startAddressIndex)
@@ -316,13 +334,15 @@ void FLProgDwin::sendQuery()
   {
     _executor->readUart(_uartPortNumber);
   }
-  Serial4.print("Dwin Send: ");
-  for (uint8_t i = 0; i < _bufferSize; i++)
-  {
-    Serial4.print(_buffer[i], HEX);
-    Serial4.print("-");
-  }
-  Serial4.println();
+  /*
+    Serial4.print("Dwin Send: ");
+    for (uint8_t i = 0; i < _bufferSize; i++)
+    {
+      Serial4.print(_buffer[i], HEX);
+      Serial4.print("-");
+    }
+    Serial4.println();
+  */
   _executor->writeUart(_buffer, _bufferSize, _uartPortNumber);
   _startSendTime = millis();
   _status = FLPROG_DWIN_WAITING_ANSWER;
@@ -362,6 +382,10 @@ uint16_t FLProgDwin::pacadgeSize()
   }
   if (_buffer[3] == 0x82)
   {
+    if (_isUseCRC)
+    {
+      return 8;
+    }
     return 6;
   }
   return _buffer[2] + 3;
@@ -369,6 +393,15 @@ uint16_t FLProgDwin::pacadgeSize()
 
 void FLProgDwin::checkAnswerData()
 {
+  /*
+  Serial4.print("Dwin Read: ");
+  for (uint8_t i = 0; i < _bufferSize; i++)
+  {
+    Serial4.print(_buffer[i], HEX);
+    Serial4.print("-");
+  }
+  Serial4.println();
+*/
   if (_buffer[3] == 0x82)
   {
     _status = FLPROG_DWIN_READY;
@@ -389,13 +422,6 @@ void FLProgDwin::checkAnswerData()
       _bufferSize = 0;
       return;
     }
-    Serial4.print("Dwin Read: ");
-    for (uint8_t i = 0; i < _bufferSize; i++)
-    {
-      Serial4.print(_buffer[i], HEX);
-      Serial4.print("-");
-    }
-    Serial4.println();
 
     int32_t startAddress = (int32_t)word(_buffer[4], _buffer[5]);
     int32_t addressIndex;
